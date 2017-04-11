@@ -147,10 +147,9 @@ function newCharacterSuccess(json) {
   var bookId = book._id;
   console.log('new character for book', book);
   // find the book with the correct ID and update it
-  console.log(allBooks)
-  for(let currentBook of allBooks) {
-    if(currentBook._id === bookId) {
-      currentBook = book;
+  for(var i=0; i<allBooks.length; i++) {
+    if(allBooks[i]._id === bookId) {
+      allBooks[i] = book;
       console.log('found!');
       break;  // we found our book - no reason to keep searching (this is why we didn't use forEach)
     }
