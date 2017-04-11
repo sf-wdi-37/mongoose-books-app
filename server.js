@@ -133,10 +133,12 @@ app.delete('/api/books/:book_id/characters/:character_id', function (req, res) {
   // Get book id from url params (`req.params`)
   var bookId = req.params.book_id;
   var characterId = req.params.character_id;
+  console.log(`deleting character ${characterId} from book ${bookId}`);
   db.Book.findById(bookId)
     .populate('author')
     .exec(function(err, foundBook) {
       if (err) {
+        console.log('error!', err.message);
         res.status(500).json({error: err.message});
       } else if (foundBook === null) {
         res.status(404).json({error: "No Book found by this ID"});
