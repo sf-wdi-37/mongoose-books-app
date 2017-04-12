@@ -16,21 +16,37 @@ var db = require('./models');
 // generate a new express app and call it 'app'
 var app = express();
 
+
+
+////////////////////
+//  MIDDLEWARE
+///////////////////
+
+
 // serve static files in public
 app.use(express.static('public'));
 
 // body parser config to accept our datatypes
 app.use(bodyParser.urlencoded({ extended: true }));
 
+// custom middleware to console.log some helpful information
+//   in terminal every time we get a request
+function logRequestInfo(req, res, next){
+  console.log(`\nRECEIVED REQUEST : ${req.method} ${req.url}`);
+  console.log('query params:', req.query);
+  console.log('body:', req.body);
+  // request url parameters haven't been decided yet
+  //  so we'll have to log them inside any routes where
+  //  we want to use them
+  next();
+}
+app.use(logRequestInfo);
 
 
 
 ////////////////////
 //  ROUTES
 ///////////////////
-
-
-
 
 // define a root route: localhost:3000/
 app.get('/', function (req, res) {
@@ -41,15 +57,24 @@ app.get('/', function (req, res) {
 app.get('/api/books', function (req, res) {
   // send all books as JSON response
   db.Book.find(function(err, books){
-    if (err) { return console.log("index error: " + err); }
-    res.json(books);
+    if (err) {
+      console.log("error: " + err.message);
+      res.status(500).send();
+    } else {
+      res.json(books);
+    }
   });
 });
 
 // get one book
 app.get('/api/books/:id', function (req, res) {
   db.Book.findOne({_id: req.params.id }, function(err, data) {
-    res.json(data);
+    if (err) {
+      console.log("error: " + err.message);
+      res.status(500).send();
+    } else {
+      res.json(data);
+    }
   });
 });
 
@@ -76,8 +101,9 @@ app.delete('/api/books/:id', function (req, res) {
 });
 
 
-
-
+////////////////////
+//  LISTEN
+///////////////////
 
 app.listen(process.env.PORT || 3000, function () {
   console.log('Example app listening at http://localhost:3000/');
