@@ -1,6 +1,11 @@
 // server.js
 // SERVER-SIDE JAVASCRIPT
 
+
+/////////////////////////////
+//  SETUP and CONFIGURATION
+/////////////////////////////
+
 //require express in our app
 var express = require('express'),
   bodyParser = require('body-parser'),
@@ -9,7 +14,11 @@ var express = require('express'),
 // generate a new express app and call it 'app'
 var app = express();
 
-// MIDDLEWARE
+
+////////////////////
+//  MIDDLEWARE
+///////////////////
+
 // serve static files in public
 app.use(express.static('public'));
 
@@ -20,14 +29,19 @@ app.use(bodyParser.urlencoded({ extended: true }));
 //   in terminal every time we get a request
 function logRequestInfo(req, res, next){
   console.log(`\nRECEIVED REQUEST : ${req.method} ${req.url}`);
-  console.log('  url params:', req.params);
-  console.log('  query params:', req.query);
-  console.log('  body:', req.body);
+  console.log('query params:', req.query);
+  console.log('body:', req.body);
+  // request url parameters haven't been decided yet
+  //  so we'll have to log them inside any routes where
+  //  we want to use them
   next();
 }
 app.use(logRequestInfo);
 
-// ROUTES
+////////////////////
+//  ROUTES
+///////////////////
+
 // define a root route: localhost:3000/
 app.get('/', function (req, res) {
   res.sendFile('views/index.html' , { root : __dirname});
@@ -49,9 +63,9 @@ app.get('/api/books', function (req, res) {
 
 });
 
-
+// find one book by its id
 app.get('/api/books/:id', function (req, res) {
-  // find one book by its id
+  console.log('request url params:', req.params)
   db.Book.findById(req.params.id)
     // populate the author
     .populate('author')
@@ -85,7 +99,7 @@ app.post('/api/books', function (req, res) {
         // this author doesn't exist in our database yet
         // let's log an informative error message
         console.log(`book create error: author ${req.body.author} not found - create author first!`);
-        res.status(404).send();
+        res.status(500).send();
       } else {
         // found the author!
         // add this author to the book
@@ -111,7 +125,7 @@ app.post('/api/books', function (req, res) {
 // delete book
 app.delete('/api/books/:id', function (req, res) {
   // get book id from url params (`req.params`)
-  console.log(req.params)
+  console.log('request url params:', req.params)
   var bookId = req.params.id;
 
   db.Book.findOneAndRemove({ _id: bookId }, function (err, deletedBook) {
@@ -123,6 +137,12 @@ app.delete('/api/books/:id', function (req, res) {
     }
   });
 });
+
+
+////////////////////
+//  LISTEN
+///////////////////
+
 
 app.listen(process.env.PORT || 3000, function () {
   console.log('Example app listening at http://localhost:3000/');
