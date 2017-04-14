@@ -5,10 +5,100 @@
 That's right: we're going to add Characters to each of the books.
 Characters, however, are usually pretty unique to the book that they're in, so we'll be using an **embedded** document; embedding `Character` into the `Book` schema.  
 
-1. Switch to a new directory (so that you don't overwrite your old work) and checkout the `solution-sprint-2` branch. It has been an updated frontend with characters.
-2. Startup the app making sure to `node seed.js` and `node server.js`.  
-3. Take a look at the current UI in your web browser.  You should see that a new field has been added to each book listed.
-4. Open your web browser developer tools.  Try to add a character to one of the books.  You should see an error message like: `jquery.min.js:4 POST http://localhost:3000/api/books/56fc1e8a8d4bcdb3e5e0092e/characters 404 (Not Found)`
+1. Switch to a new directory (so that you don't overwrite your old work) and checkout the `solution-sprint-2` branch. 
+
+2. Update your `app.js` so that each book is added to the page with additional character information:
+
+ ```js
+ // app.js 
+ // only ADDITIONS or CHANGES are shown
+ // YOU should think about where to place them!
+  $booksList.on('submit', '#addCharacterForm', function(e) {
+    e.preventDefault();
+    console.log('new characters');
+    $.ajax({
+      method: 'POST',
+      url: '/api/books/'+$(this).attr('data-id')+'/characters',
+      data: $(this).serializeArray(),
+      success: newCharacterSuccess,
+      error: newCharacterError
+    });
+  });
+
+...
+
+function getCharacterHtml(_book_id, character) {
+  return `${character.name} <button class="deleteCharacter btn btn-danger" data-bookid=${_book_id} data-charid=${character._id}><b>x</b></button>`;
+}
+
+function getAllCharactersHtml(_book_id, characters) {
+  if (characters) {
+    return characters.map(function(character) {
+                return getCharacterHtml(_book_id, character);
+              }).join("");
+  } else {
+    return "";
+  }
+}
+
+function getBookHtml(book) {
+  return `<hr>
+          <p>
+            <b>${book.title}</b>
+            by ${(book.author) ? book.author.name : 'null'}
+            <br>
+            <b>Characters:</b>
+            ${getAllCharactersHtml(book.id, book.characters)}
+            <button type="button" name="button" class="deleteBtn btn btn-danger pull-right" data-id=${book._id}>Delete</button>
+          </p>
+          <form class="form-inline" id="addCharacterForm" data-id=${book._id}>
+            <div class="form-group">
+              <input type="text" class="form-control" name="name" placeholder="Book character">
+            </div>
+            <button type="submit" class="btn btn-default">Add character</button>
+          </form>
+          `;
+}
+
+function getAllBooksHtml(books) {
+  return books.map(getBookHtml).join("");
+}
+// helper function to render all posts to view
+// note: we empty and re-render the collection each time our post data changes
+function render () {
+  // empty existing posts from view
+  $booksList.empty();
+
+  // pass `allBooks` into the template function
+  var booksHtml = getAllBooksHtml(allBooks);
+
+  // append html to the view
+  $booksList.append(booksHtml);
+};
+
+function newCharacterSuccess(json) {
+  var book = json;
+  var bookId = book._id;
+  // find the book with the correct ID and update it
+  for(var index = 0; index < allBooks.length; index++) {
+    if(allBooks[index]._id === bookId) {
+      allBooks[index] = book;
+      break;  // we found our book - no reason to keep searching (this is why we didn't use forEach)
+    }
+  }
+  render();
+}
+
+function newCharacterError() {
+  console.log('adding new character error!');
+}
+```
+
+
+
+3. Startup the app, making sure to `node seed.js` and `node server.js`.  
+4. Take a look at the current UI in your web browser.  You should see that a new field has been added to each book listed.
+5. Open your web browser developer tools.  Try to add a character to one of the books.  You should see an error message like: `jquery.min.js:4 POST http://localhost:3000/api/books/56fc1e8a8d4bcdb3e5e0092e/characters 404 (Not Found)`
   * What type of error is 404?
 
 
